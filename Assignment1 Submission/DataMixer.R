@@ -22,5 +22,4 @@ limb.plot =ggplot(data=MData, aes(x=convertedW,y=convertedL,size=Volume)) +
 print(limb.plot + ggtitle("Comparison of Species Limb Width vs. Length")+
         labs(x="Limb Width (cm)",y="Limb length (cm)",size="Volume (cm)"))
 
-}
       

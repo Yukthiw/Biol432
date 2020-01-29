@@ -1,0 +1,31 @@
+---
+title: "Regex"
+author: "Yukthi"
+date: "29/01/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r imports}
+library(dplyr)
+MData = read.csv("measurements.csv")
+```
+
+
+# Modification of Species Column
+
+In this file I re-read the measurements.csv file into a datafam called MData. I then produced a new column by using the dplyr.transmute function to return a dataframe column using the sub function to change the "Species" values to the new truncated form. After doing this I then assigned this returned column to a new column in the MData dataframe called Sp.
+
+Finally using the select function I made a new dataframe called newData which took all columns in the MData dataframe but replaced the Species column with the Sp column.
+
+```{r manipulation}
+MData= mutate(MData, Sp = sub('(\\w)\\w+',
+                         '\\1\\.',
+                         as.vector(t(MData['Species'])))
+                        )
+newData = select(MData,Sp,Limb.Width:unitsL)
+print(newData)
+```

@@ -1,0 +1,161 @@
+---
+title: "DataAnalysis"
+author: "Yukthi"
+date: "21/01/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+
+# Data Analysis of Species Limbs
+
+Data was read from "Measurements.csv" file which contained 10 samples of randomly generated limb lengths and widths for 10 species of monkey (randomly selected). Measurements were all converted to centimetres and volume of each limb was calculated, taking the width measurement as the depth measurement as well.
+
+```{r dataInput, echo=FALSE}
+MData = read.csv("Measurements.csv")
+
+MData = rename(
+    MData,
+    Spc = Species,
+    Lbw = Limb.Width,
+    Unw= unitsW,
+    Lbl = Limb.Length,
+    Unl=unitsL 
+  ) 
+
+MData <- within(MData,Lbw[Unw=='mm'] <- Lbw[Unw=='mm']/10)
+MData <- within(MData,Lbl[Unl=='mm'] <- Lbl[Unl=='mm']/10)
+
+MData$Unw = 'cm'
+MData$Unl = 'cm'
+MData$Volume = (MData$Lbw**2)*MData$Lbl
+
+volumeMean = mean(MData$Volume)
+volumeMedian = median(MData$Volume)
+aboveAverage = subset(
+  MData,
+  Volume>volumeMean, 
+  select = c(Lbw,Lbl,Volume)
+)
+aboveMedian = subset(
+  MData,
+  Volume>volumeMedian, 
+  select = c(Lbw,Lbl,Volume)
+)
+belowAverage = subset(
+  MData,
+  Volume<=volumeMean, 
+  select = c(Lbw,Lbl,Volume)
+)
+belowMedian = subset(
+  MData,
+  Volume<=volumeMedian, 
+  select = c(Lbw,Lbl,Volume)
+)
+
+MData$continent = c('Asia',
+                    'Africa',
+                    'Asia',
+                    'Asia',
+                    'Asia',
+                    'Africa',
+                    'S. America',
+                    'Asia', 'Africa',
+                    'Africa'
+                    )
+
+
+grouped = group_by(MData,continent)
+summaryTable = summarise(grouped,
+          meanW=mean(Lbw),
+          sdW=sd(Lbw),
+          meanL=mean(Lbl),
+          sdL=sd(Lbl),
+          meanVol=mean(Volume),
+          sdVol = sd(Volume)
+          )
+```
+
+## Plots
+
+
+
+```{r DataPlot, echo=FALSE}
+limb.plot =ggplot(data=MData, aes(x=Lbw,y=Lbl,size=Volume)) + 
+  geom_point(alpha=0.7)
+print(limb.plot + ggtitle("Comparison of Species Limb Width vs. Length")+
+        labs(x="Limb Width (cm)",y="Limb length (cm)",size="Volume (cm)"))
+```
+
+
+
+Plot of all 10 samples' limb length vs. limb width, and corresponding volumes.
+
+
+
+```{r DataPlot2, echo=FALSE}
+limb.plot2 =ggplot(data=aboveAverage, aes(x=Lbw,y=Lbl,size=Volume)) + 
+  geom_point(alpha=0.7)
+print(limb.plot2 + ggtitle("Limb Width vs. Length Above Average")+
+        labs(x="Limb Width (cm)",y="Limb length (cm)",size="Volume (cm)"))
+```
+
+
+Plot of only species with above average limb volume.
+
+
+
+```{r DataPlot3, echo=FALSE}
+limb.plot3 =ggplot(data=aboveMedian, aes(x=Lbw,y=Lbl,size=Volume)) + 
+  geom_point(alpha=0.7)
+print(limb.plot3 + ggtitle("Limb Width vs. Length Above Median")+
+        labs(x="Limb Width (cm)",y="Limb length (cm)",size="Volume (cm)"))
+```
+
+
+Due to one data point skewing the mean, the "Above Average" limb volume plot only contained one data point. For more interesting results, the limb volumes of all species above the median was plotted.
+
+
+
+```{r DataTable1, echo=FALSE}
+belowAverage=rename(
+  belowAverage,
+  Limb_Width = Lbw,
+  Limb_Length =Lbl,
+)
+kable(belowAverage)
+
+```
+
+Limb Measurements below average limb volume
+
+```{r DataTable2, echo=FALSE}
+
+belowMedian=rename(
+  belowMedian,
+  Limb_Width = Lbw,
+  Limb_Length =Lbl,
+)
+kable(belowMedian)
+
+```
+
+
+Limb measurements for species below median limb volume.
+
+
+
+
+
+Continent| Mean Width | SD Width | Mean Length | SD Length | Mean Volume | SD Volume
+------|------|------|------|------|------|
+Africa | 8.88 | 10.11 | 9.81 | 8.80 | 2743.63 | 5214.86
+Asia | 1.84 | 1.74 | 5.60 | 9.87 | 6.16 | 6.16 | 7.02
+S. America | 1.93	| NaN | 8.85|	NaN	| 32.98 | 32.98 | NaN
+
+Mean and Standard Deviation of Limb Length, Width and Volume based on Species' continent of origin.
